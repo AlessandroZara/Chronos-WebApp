@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+/* La dark mode si attiva con la classe .dark sull'elemento <html>,
+   gestita da App.tsx (manuale o automatica in base all'orario). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200;
+  }
+}
+
+/* Classi riutilizzabili dell'interfaccia (registrate con @utility
+   così Tailwind v4 permette di comporle tra loro con @apply). */
+@utility card {
+  @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900;
+}
+@utility input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100;
+}
+@utility label {
+  @apply mb-1 block text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400;
+}
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-indigo-600 text-white shadow-sm hover:bg-indigo-500;
+}
+@utility btn-ghost {
+  @apply btn text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800;
+}
+@utility btn-danger {
+  @apply btn text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+}
+
+/* Editor rich-text delle note */
+.rich-editor {
+  min-height: 16rem;
+  outline: none;
+}
+.rich-editor:empty::before {
+  content: 'Scrivi qui la tua nota… Usa [[Titolo]] per collegare altre note.';
+  color: #94a3b8;
+  pointer-events: none;
+}
+.rich-editor h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.5rem;
+}
+.rich-editor ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+.rich-editor ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+.rich-editor a {
+  color: #6366f1;
+  text-decoration: underline;
+}
+.rich-editor p {
+  margin: 0.25rem 0;
+}
+
+/* Scrollbar discreta */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.4) transparent;
+}
