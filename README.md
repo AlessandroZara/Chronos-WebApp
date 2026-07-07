@@ -20,7 +20,8 @@
 
 - [x] **To-Do List** — attività con priorità (alta/media/bassa), scadenze, orari, filtri, modifica e promemoria
 - [x] **Calendario** — vista mensile con attività ed eventi integrati, creazione rapida di eventi
-- [x] **Note rich-text** — editor con grassetto, corsivo, titoli, elenchi puntati e numerati
+- [x] **Note rich-text** — editor con grassetto, corsivo, titoli, elenchi, salvataggio automatico + pulsante «Salva nota» con conferma
+- [x] **Immagini nelle note** — inserimento di una o più immagini (compresse automaticamente), rimozione con un click, sincronizzate col database insieme alla nota
 - [x] **Organizzazione note avanzata** — tag, ricerca full-text e collegamenti bidirezionali `[[wiki-style]]` con pannello dei backlink
 - [x] **Focus Timer (Pomodoro)** — sessioni di lavoro e pause configurabili, cicli automatici, collegamento a un'attività
 - [x] **Sistema di notifiche** — promemoria per attività, eventi e abitudini: toast in-app + notifiche di sistema (desktop e mobile via service worker), attivabili per singolo modulo
@@ -36,7 +37,7 @@
 - [x] **Pagina profilo** — dal chip nella dashboard: modifica di nome, cognome, email e password salvati nel database, più logout
 - [x] **Sicurezza** — password con hash bcrypt, token personale per sessione, blocco account di 15 minuti dopo 5 tentativi falliti
 - [ ] **Email di conferma registrazione** *(in roadmap)*
-- [ ] **Allegati alle note** — file e immagini *(in roadmap)*
+- [ ] **Allegati generici alle note** — PDF e altri file *(in roadmap)*
 
 ---
 

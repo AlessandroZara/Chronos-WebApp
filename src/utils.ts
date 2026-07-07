@@ -106,3 +106,30 @@ export const UNIT_MS: Record<ReminderUnit, number> = {
   ore: 3_600_000,
   giorni: 86_400_000,
 };
+
+/**
+ * Comprime un'immagine per l'inserimento nelle note: la ridimensiona
+ * (max 1024px di larghezza) e la converte in JPEG. Così anche le foto
+ * da megapixel diventano ~100-300 KB e non gonfiano né il localStorage
+ * né la sincronizzazione col server.
+ */
+export function compressImage(file: File, maxWidth = 1024, quality = 0.82): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Immagine non valida'));
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => reject(new Error('Lettura del file fallita'));
+    reader.readAsDataURL(file);
+  });
+}

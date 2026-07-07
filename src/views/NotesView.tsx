@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChronos } from '../store';
-import { extractWikiLinks, stripHtml } from '../utils';
+import { useToasts } from '../notifications';
+import { compressImage, extractWikiLinks, stripHtml } from '../utils';
 
 /*
  * ============================================================
@@ -34,18 +35,30 @@ import { extractWikiLinks, stripHtml } from '../utils';
 function RichEditor({
   initialHtml,
   onChange,
+  registerFlush,
 }: {
   initialHtml: string;
   onChange: (html: string) => void;
+  /** Consente al genitore di forzare un salvataggio immediato (pulsante "Salva nota"). */
+  registerFlush?: (fn: () => void) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
   const latestHtml = useRef(initialHtml); // ultima versione del contenuto
   const dirty = useRef(false); // ci sono modifiche non ancora salvate?
 
+  // Salvataggio immediato: annulla il debounce e scrive subito nello store.
+  const flushNow = () => {
+    window.clearTimeout(debounceTimer.current);
+    if (ref.current) latestHtml.current = ref.current.innerHTML;
+    dirty.current = false;
+    onChange(latestHtml.current);
+  };
+
   // Inserisce l'HTML della nota UNA sola volta, al montaggio.
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = initialHtml;
+    registerFlush?.(flushNow);
     // Al momento dello smontaggio (es. cambio nota) salviamo subito
     // eventuali modifiche in sospeso, senza aspettare il debounce.
     return () => {
@@ -72,6 +85,30 @@ function RichEditor({
   const exec = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     ref.current?.focus();
+    scheduleSave();
+  };
+
+  // --- Immagini nella nota ---
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pushToast = useToasts((s) => s.push);
+
+  // Inserisce una o più immagini (compresse) nel punto del cursore.
+  const insertImages = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 8 * 1024 * 1024) {
+        pushToast('🖼️ Immagine troppo grande', `"${file.name}" supera gli 8 MB.`);
+        continue;
+      }
+      try {
+        const dataUrl = await compressImage(file);
+        ref.current?.focus();
+        document.execCommand('insertImage', false, dataUrl);
+      } catch {
+        pushToast('🖼️ Immagine non valida', `Impossibile leggere "${file.name}".`);
+      }
+    }
     scheduleSave();
   };
 
@@ -116,15 +153,40 @@ function RichEditor({
           title="Inserisci collegamento a un'altra nota"
           onAction={() => exec('insertText', '[[Titolo nota]]')}
         />
+        <ToolBtn
+          label="🖼️"
+          title="Inserisci una o più immagini (clicca un'immagine per rimuoverla)"
+          onAction={() => imageInputRef.current?.click()}
+        />
+        {/* Input nascosto: si apre col pulsante 🖼️ della toolbar */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            void insertImages(e.target.files);
+            e.target.value = ''; // permette di reinserire la stessa immagine
+          }}
+        />
       </div>
 
-      {/* Area di scrittura vera e propria */}
+      {/* Area di scrittura vera e propria.
+          Click su un'immagine = proposta di rimozione (oltre a Canc/Backspace). */}
       <div
         ref={ref}
         contentEditable
         suppressContentEditableWarning
         className="rich-editor rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700"
         onInput={scheduleSave}
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.tagName === 'IMG' && confirm("Rimuovere l'immagine dalla nota?")) {
+            target.remove();
+            scheduleSave();
+          }
+        }}
       />
     </div>
   );
@@ -174,6 +236,19 @@ export default function NotesView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState(''); // ricerca full-text
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+
+  // Pulsante "Salva nota": forza il salvataggio dell'editor e mostra conferma.
+  const flushEditor = useRef<(() => void) | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const feedbackTimer = useRef<number | undefined>(undefined);
+
+  const saveNote = () => {
+    flushEditor.current?.();
+    const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    setSaveFeedback(`✅ Nota salvata alle ${time}`);
+    window.clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = window.setTimeout(() => setSaveFeedback(null), 3000);
+  };
 
   const selected = notes.find((n) => n.id === selectedId) ?? null;
 
@@ -313,18 +388,6 @@ export default function NotesView() {
                 placeholder="Titolo della nota"
                 onChange={(e) => updateNote(selected.id, { title: e.target.value })}
               />
-              <button
-                onClick={() => {
-                  if (confirm(`Eliminare la nota "${selected.title}"?`)) {
-                    deleteNote(selected.id);
-                    setSelectedId(null);
-                  }
-                }}
-                className="btn-danger !p-2"
-                aria-label="Elimina nota"
-              >
-                🗑️
-              </button>
             </div>
 
             <TagsInput
@@ -335,7 +398,36 @@ export default function NotesView() {
             <RichEditor
               initialHtml={selected.html}
               onChange={(html) => updateNote(selected.id, { html })}
+              registerFlush={(fn) => (flushEditor.current = fn)}
             />
+
+            {/* Barra delle azioni: rende esplicito quello che l'autosalvataggio
+                fa già in silenzio, così l'esperienza è più chiara. */}
+            <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <button onClick={saveNote} className="btn-primary">
+                💾 Salva nota
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm(`Eliminare la nota "${selected.title}"?`)) {
+                    deleteNote(selected.id);
+                    setSelectedId(null);
+                  }
+                }}
+                className="btn-danger border border-red-200 dark:border-red-900"
+              >
+                🗑️ Elimina nota
+              </button>
+              {saveFeedback ? (
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {saveFeedback}
+                </span>
+              ) : (
+                <span className="ml-auto text-xs text-slate-400">
+                  ✨ Salvataggio automatico attivo mentre scrivi
+                </span>
+              )}
+            </div>
 
             {/* Pannello dei collegamenti bidirezionali */}
             {(outgoing.length > 0 || backlinks.length > 0) && (

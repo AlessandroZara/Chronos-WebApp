@@ -111,6 +111,8 @@ check(
 );
 
 // ---- Test 5: Luca su un profilo vergine non vede i dati di Mario ----
+// NOTA: non si controlla che Luca abbia zero elementi (il suo account può
+// avere dati veri), ma che NON veda il task-sentinella di Mario.
 const ctx = await browser.createBrowserContext();
 const page2 = await ctx.newPage();
 await page2.goto(APP, { waitUntil: 'networkidle2' });
@@ -119,8 +121,45 @@ await sleep(3000);
 const luca = await readState(page2);
 check(
   '5. login Luca: account separato, nessun dato di Mario',
-  luca.logged && luca.firstName === 'Luca' && luca.tasks.length === 0,
-  `utente=${luca.firstName}, task=${luca.tasks.length}`
+  luca.logged && luca.firstName === 'Luca' && !luca.tasks.includes('Compito segreto di Mario'),
+  `utente=${luca.firstName}, task=[${luca.tasks.join(', ')}]`
+);
+
+// ---- Test 6: layout responsive (viewport da smartphone) ----
+// Sidebar desktop nascosta, barra di navigazione inferiore visibile,
+// nessuno scroll orizzontale.
+await page.setViewport({ width: 390, height: 844 });
+await sleep(400);
+const mobile = await page.evaluate(() => {
+  const aside = document.querySelector('aside');
+  const bottomNav = document.querySelector('nav.fixed');
+  return {
+    sidebarHidden: !aside || getComputedStyle(aside).display === 'none',
+    bottomNavVisible: !!bottomNav && getComputedStyle(bottomNav).display !== 'none',
+    noHorizontalScroll: document.documentElement.scrollWidth <= window.innerWidth + 1,
+  };
+});
+check(
+  '6. layout mobile (390px): sidebar nascosta, barra inferiore, no scroll orizzontale',
+  mobile.sidebarHidden && mobile.bottomNavVisible && mobile.noHorizontalScroll,
+  JSON.stringify(mobile)
+);
+
+// E il contrario su desktop (1280px).
+await page.setViewport({ width: 1280, height: 800 });
+await sleep(400);
+const desktop = await page.evaluate(() => {
+  const aside = document.querySelector('aside');
+  const bottomNav = document.querySelector('nav.fixed');
+  return {
+    sidebarVisible: !!aside && getComputedStyle(aside).display !== 'none',
+    bottomNavHidden: !bottomNav || getComputedStyle(bottomNav).display === 'none',
+  };
+});
+check(
+  '7. layout desktop (1280px): sidebar visibile, barra inferiore nascosta',
+  desktop.sidebarVisible && desktop.bottomNavHidden,
+  JSON.stringify(desktop)
 );
 
 await browser.close();
