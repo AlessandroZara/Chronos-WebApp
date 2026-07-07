@@ -27,6 +27,7 @@
 - [x] **Sistema di notifiche** — promemoria per attività, eventi e abitudini: toast in-app + notifiche di sistema (desktop e mobile via service worker), attivabili per singolo modulo
 - [x] **Promemoria generale configurabile** — notifica di riepilogo (attività, eventi, abitudini) con frequenza a scelta: ogni giorno, ogni 2-3 giorni o settimanale, all'orario preferito
 - [x] **Eventi con categoria e preavviso** — tipo di evento (appuntamento, lavoro, salute, compleanno…) con icona e colore, e notifica anticipata configurabile in minuti, ore o giorni
+- [x] **Eventi completi e modificabili** — luogo e note/dettagli opzionali, modifica di ogni campo, spostamento a un'altra data, eliminazione con conferma
 - [x] **Habit Tracker** — abitudini quotidiane con streak 🔥, griglia degli ultimi 28 giorni e promemoria a orario
 - [x] **Statistiche e resoconti** — dashboard con grafici settimanali/mensili su focus, attività completate e abitudini, più report testuale
 - [x] **Modalità scura** — manuale, in base al tema di sistema del dispositivo, o programmata in base all'orario

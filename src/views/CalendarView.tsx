@@ -24,6 +24,8 @@ export default function CalendarView() {
   const [evTitle, setEvTitle] = useState('');
   const [evTime, setEvTime] = useState('');
   const [evKind, setEvKind] = useState<EventKind>('appuntamento');
+  const [evLocation, setEvLocation] = useState(''); // luogo (opzionale)
+  const [evNotes, setEvNotes] = useState(''); // dettagli (opzionale)
   const [evReminder, setEvReminder] = useState(true);
   // Preavviso: "avvisami X minuti/ore/giorni prima dell'evento".
   const [evRemValue, setEvRemValue] = useState(30);
@@ -35,6 +37,8 @@ export default function CalendarView() {
     setEvTitle('');
     setEvTime('');
     setEvKind('appuntamento');
+    setEvLocation('');
+    setEvNotes('');
     setEvReminder(true);
     setEvRemValue(30);
     setEvRemUnit('min');
@@ -47,6 +51,8 @@ export default function CalendarView() {
     setEvTitle(e.title);
     setEvTime(e.time ?? '');
     setEvKind(e.kind ?? 'appuntamento');
+    setEvLocation(e.location ?? '');
+    setEvNotes(e.notes ?? '');
     setEvReminder(e.reminder);
     setEvRemValue(e.reminderValue ?? 30);
     setEvRemUnit(e.reminderUnit ?? 'min');
@@ -91,6 +97,8 @@ export default function CalendarView() {
       date: selected,
       time: evTime || undefined,
       kind: evKind,
+      location: evLocation.trim() || undefined,
+      notes: evNotes.trim() || undefined,
       reminder: evReminder,
       // Il preavviso viene salvato solo se il promemoria è attivo.
       reminderValue: evReminder ? evRemValue : undefined,
@@ -235,6 +243,20 @@ export default function CalendarView() {
               onChange={(e) => setEvTime(e.target.value)}
             />
           </div>
+          {/* Campi opzionali: luogo e dettagli dell'evento */}
+          <input
+            className="input"
+            placeholder="📍 Luogo (opzionale) — es. Studio medico, Via Roma 1"
+            value={evLocation}
+            onChange={(e) => setEvLocation(e.target.value)}
+          />
+          <textarea
+            className="input resize-y"
+            rows={2}
+            placeholder="📝 Note e dettagli (opzionale) — es. portare documenti, citofono 3…"
+            value={evNotes}
+            onChange={(e) => setEvNotes(e.target.value)}
+          />
           {/* Promemoria anticipato: quanto tempo prima ricevere la notifica */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <label className="flex cursor-pointer items-center gap-1.5">
@@ -315,6 +337,17 @@ export default function CalendarView() {
                     e.reminderUnit &&
                     ` · 🔔 ${fmtOffset(e.reminderValue, e.reminderUnit)} prima`}
                 </p>
+                {/* Luogo e dettagli, mostrati solo se presenti */}
+                {e.location && (
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    📍 {e.location}
+                  </p>
+                )}
+                {e.notes && (
+                  <p className="mt-0.5 text-xs whitespace-pre-wrap text-slate-500 dark:text-slate-400">
+                    📝 {e.notes}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => startEditEvent(e)}

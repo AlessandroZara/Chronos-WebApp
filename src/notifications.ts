@@ -134,9 +134,12 @@ export function checkReminders() {
         const key = `evrem:${e.id}:${e.date}:${e.time ?? ''}:${e.reminderValue}${e.reminderUnit}`;
         if (nowMs >= triggerMs && nowMs < eventMs && !notified.has(key)) {
           const kind = EVENT_KINDS[e.kind ?? 'appuntamento'];
+          const when = e.date === today ? 'oggi' : fmtDate(e.date);
+          // Se c'è un luogo lo aggiungiamo al messaggio: si sa subito dove andare.
+          const place = e.location ? ` · 📍 ${e.location}` : '';
           notify(
             `${kind.icon} Tra ${fmtOffset(e.reminderValue, e.reminderUnit)}: ${e.title}`,
-            `${kind.label} in programma ${e.date === today ? `oggi${e.time ? ` alle ${e.time}` : ''}` : `${fmtDate(e.date)}${e.time ? ` alle ${e.time}` : ''}`}.`
+            `${kind.label} in programma ${when}${e.time ? ` alle ${e.time}` : ''}${place}.`
           );
           markNotified(key);
         }

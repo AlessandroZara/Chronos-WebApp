@@ -30,6 +30,8 @@ export interface CalEvent {
   date: string; // YYYY-MM-DD
   time?: string; // HH:MM
   kind?: EventKind;
+  location?: string; // luogo dell'evento (opzionale)
+  notes?: string; // dettagli/annotazioni (opzionale)
   reminder: boolean;
   /** Preavviso: quanto tempo prima notificare (es. 30 min, 2 ore, 1 giorno). */
   reminderValue?: number;
