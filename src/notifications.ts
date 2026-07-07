@@ -128,4 +128,29 @@ export function checkReminders() {
       }
     }
   }
+
+  // Riepilogo giornaliero: una sola notifica al giorno, all'orario scelto
+  // (o appena si apre l'app, se l'orario è già passato).
+  if (settings.notifDaily && now >= settings.dailyTime) {
+    const key = `daily:${today}`;
+    if (!notified.has(key)) {
+      const dueToday = tasks.filter((t) => !t.done && t.due === today).length;
+      const overdue = tasks.filter((t) => !t.done && t.due && t.due < today).length;
+      const todayEvents = events.filter((e) => e.date === today).length;
+      const habitsTodo = habits.filter((h) => !h.days[today]).length;
+
+      const parts: string[] = [];
+      if (dueToday > 0) parts.push(`${dueToday} attività in scadenza`);
+      if (overdue > 0) parts.push(`${overdue} in ritardo`);
+      if (todayEvents > 0) parts.push(`${todayEvents} ${todayEvents === 1 ? 'evento' : 'eventi'} a calendario`);
+      if (habitsTodo > 0) parts.push(`${habitsTodo} abitudini da completare`);
+
+      const body =
+        parts.length > 0
+          ? `Oggi hai: ${parts.join(', ')}. Dai un'occhiata! 💪`
+          : 'Nessun impegno in programma: giornata libera! 🌤️';
+      notify('🌅 Il tuo riepilogo di oggi', body);
+      markNotified(key);
+    }
+  }
 }

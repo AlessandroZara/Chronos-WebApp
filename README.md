@@ -24,6 +24,7 @@
 - [x] **Organizzazione note avanzata** — tag, ricerca full-text e collegamenti bidirezionali `[[wiki-style]]` con pannello dei backlink
 - [x] **Focus Timer (Pomodoro)** — sessioni di lavoro e pause configurabili, cicli automatici, collegamento a un'attività
 - [x] **Sistema di notifiche** — promemoria per attività, eventi e abitudini: toast in-app + notifiche di sistema (desktop e mobile via service worker), attivabili per singolo modulo
+- [x] **Riepilogo giornaliero** — notifica quotidiana all'orario scelto con attività in scadenza, eventi a calendario e abitudini da completare
 - [x] **Habit Tracker** — abitudini quotidiane con streak 🔥, griglia degli ultimi 28 giorni e promemoria a orario
 - [x] **Statistiche e resoconti** — dashboard con grafici settimanali/mensili su focus, attività completate e abitudini, più report testuale
 - [x] **Modalità scura** — manuale o programmata in base all'orario

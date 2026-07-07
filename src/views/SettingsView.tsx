@@ -196,6 +196,23 @@ export default function SettingsView() {
           disabled={!settings.notifEnabled}
           onChange={(v) => setSettings({ notifHabits: v })}
         />
+        <ToggleRow
+          label="Riepilogo giornaliero (attività, eventi, abitudini)"
+          checked={settings.notifDaily}
+          disabled={!settings.notifEnabled}
+          onChange={(v) => setSettings({ notifDaily: v })}
+        />
+        {settings.notifDaily && settings.notifEnabled && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-500 dark:text-slate-400">🌅 Orario del riepilogo:</span>
+            <input
+              type="time"
+              className="input !w-28 !py-1"
+              value={settings.dailyTime}
+              onChange={(e) => setSettings({ dailyTime: e.target.value })}
+            />
+          </div>
+        )}
         <button
           onClick={() => notify('🔔 Notifica di prova', 'Le notifiche funzionano! 🎉')}
           className="btn-ghost border border-slate-200 dark:border-slate-700"

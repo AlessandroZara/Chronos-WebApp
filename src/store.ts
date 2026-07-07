@@ -21,6 +21,8 @@ export const defaultSettings: Settings = {
   notifTasks: true,
   notifEvents: true,
   notifHabits: true,
+  notifDaily: true,
+  dailyTime: '08:30',
   pomodoro: { work: 25, short: 5, long: 15, cycles: 4 },
 };
 

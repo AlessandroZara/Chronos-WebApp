@@ -75,6 +75,8 @@ export interface Settings {
   notifTasks: boolean;
   notifEvents: boolean;
   notifHabits: boolean;
+  notifDaily: boolean; // riepilogo giornaliero (attività, eventi, abitudini)
+  dailyTime: string; // HH:MM a cui inviare il riepilogo
   pomodoro: PomodoroConfig;
 }
 
