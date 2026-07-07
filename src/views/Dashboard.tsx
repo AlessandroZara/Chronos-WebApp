@@ -12,6 +12,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (v: View) => voi
   const habits = useChronos((s) => s.habits);
   const sessions = useChronos((s) => s.sessions);
   const toggleTask = useChronos((s) => s.toggleTask);
+  const user = useChronos((s) => s.auth.user);
 
   const [range, setRange] = useState<Range>('week');
   const days = lastNDays(range === 'week' ? 7 : 30);
@@ -77,15 +78,31 @@ export default function Dashboard({ onNavigate }: { onNavigate: (v: View) => voi
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">{greeting}! 👋</h1>
-        <p className="text-sm text-slate-500 capitalize dark:text-slate-400">
-          {new Date().toLocaleDateString('it-IT', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          })}
-        </p>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {greeting}
+            {user ? `, ${user.firstName}` : ''}! 👋
+          </h1>
+          <p className="text-sm text-slate-500 capitalize dark:text-slate-400">
+            {new Date().toLocaleDateString('it-IT', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </p>
+        </div>
+        {/* Chip profilo: apre la pagina "Il mio account" */}
+        <button
+          onClick={() => onNavigate('account')}
+          title="Il mio account"
+          className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pr-3 pl-1 shadow-sm transition hover:border-indigo-300 active:scale-95 dark:border-slate-700 dark:bg-slate-900"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white uppercase">
+            {(user?.firstName?.[0] ?? '') + (user?.lastName?.[0] ?? '') || '👤'}
+          </span>
+          <span className="hidden text-sm font-medium sm:block">{user?.firstName}</span>
+        </button>
       </header>
 
       {/* Card riassuntive: 2 colonne su mobile, 4 su desktop */}

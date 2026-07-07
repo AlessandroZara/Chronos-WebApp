@@ -117,6 +117,30 @@ export async function authRequest(
   return { token: json.token, user: json.user };
 }
 
+/**
+ * Aggiorna il profilo dell'utente sul server (nome, cognome, email e,
+ * se forniti currentPassword + newPassword, anche la password).
+ * Restituisce l'utente aggiornato da salvare nello store.
+ */
+export async function updateProfile(payload: Record<string, string>): Promise<AuthUser> {
+  const a = getAuth();
+  const res = await fetch(`${a.apiUrl}?action=profile`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Chronos-Token': a.token ?? '',
+    },
+    body: JSON.stringify(payload),
+  });
+  const json = (await res.json().catch(() => null)) as
+    | { user?: AuthUser; error?: string }
+    | null;
+  if (!res.ok || !json?.user) {
+    throw new Error(json?.error ?? `Errore HTTP ${res.status}`);
+  }
+  return json.user;
+}
+
 function setOk() {
   useSyncStatus.getState().set({
     status: 'idle',

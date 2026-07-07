@@ -31,6 +31,7 @@
 - [x] **Backup dati** — esportazione/importazione completa in JSON
 - [x] **Sincronizzazione cloud** — API PHP + MySQL da caricare sul proprio hosting (es. Altervista): dati allineati tra telefono e computer, offline-first
 - [x] **Account multi-utente** — registrazione (nome, cognome, email, password) e login: ogni utente ha i propri dati, su qualunque dispositivo
+- [x] **Pagina profilo** — dal chip nella dashboard: modifica di nome, cognome, email e password salvati nel database, più logout
 - [x] **Sicurezza** — password con hash bcrypt, token personale per sessione, blocco account di 15 minuti dopo 5 tentativi falliti
 - [ ] **Email di conferma registrazione** *(in roadmap)*
 - [ ] **Allegati alle note** — file e immagini *(in roadmap)*
@@ -90,8 +91,9 @@ Chronos/
 │   ├── utils.ts             # Helper per date, formattazioni, wiki-link
 │   ├── sync.ts              # Sincronizzazione offline-first con il server
 │   ├── components/          # BarChart, Toasts
-│   └── views/               # AuthView (login/registrazione), Dashboard, Tasks,
-│                            #   CalendarView, NotesView, Focus, Habits, SettingsView
+│   └── views/               # AuthView (login/registrazione), AccountView (profilo),
+│                            #   Dashboard, Tasks, CalendarView, NotesView,
+│                            #   Focus, Habits, SettingsView
 ├── server/
 │   ├── api.php              # API REST: registrazione, login, stato per utente
 │   ├── config.sample.php    # Credenziali DB (da copiare in config.php)

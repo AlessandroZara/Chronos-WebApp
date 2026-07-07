@@ -96,4 +96,5 @@ export type View =
   | 'notes'
   | 'focus'
   | 'habits'
-  | 'settings';
+  | 'settings'
+  | 'account'; // pagina profilo, raggiungibile dal chip nella dashboard

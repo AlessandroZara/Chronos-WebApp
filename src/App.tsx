@@ -5,6 +5,7 @@ import { checkReminders, notify } from './notifications';
 import { initSync } from './sync';
 import { fmtCountdown, isTimeInRange, nowHM } from './utils';
 import Toasts from './components/Toasts';
+import AccountView from './views/AccountView';
 import AuthView from './views/AuthView';
 import Dashboard from './views/Dashboard';
 import Tasks from './views/Tasks';
@@ -142,6 +143,7 @@ export default function App() {
         {view === 'focus' && <Focus />}
         {view === 'habits' && <Habits />}
         {view === 'settings' && <SettingsView />}
+        {view === 'account' && <AccountView onBack={() => setView('dashboard')} />}
       </main>
 
       {/* Chip timer attivo, visibile ovunque */}

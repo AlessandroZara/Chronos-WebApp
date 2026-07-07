@@ -187,6 +187,73 @@ if ($action === 'login' && $method === 'POST') {
 }
 
 // ============================================================
+// MODIFICA PROFILO (nome, cognome, email, password — richiede token)
+// ============================================================
+if ($action === 'profile' && $method === 'POST') {
+    $token = $_SERVER['HTTP_X_CHRONOS_TOKEN'] ?? '';
+    if ($token === '') {
+        respond(401, ['error' => 'Token mancante: effettua il login.']);
+    }
+    $stmt = mysqli_prepare($db, 'SELECT id, password_hash FROM users WHERE api_token = ?');
+    mysqli_stmt_bind_param($stmt, 's', $token);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    if (!$user) {
+        respond(401, ['error' => 'Sessione non valida: effettua di nuovo il login.']);
+    }
+    $userId = (int) $user['id'];
+
+    $firstName = trim((string) ($body['firstName'] ?? ''));
+    $lastName = trim((string) ($body['lastName'] ?? ''));
+    $email = strtolower(trim((string) ($body['email'] ?? '')));
+    if ($firstName === '' || $lastName === '') {
+        respond(400, ['error' => 'Nome e cognome sono obbligatori.']);
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        respond(400, ['error' => 'Indirizzo email non valido.']);
+    }
+
+    // La nuova email non deve appartenere a un ALTRO account.
+    $stmt = mysqli_prepare($db, 'SELECT id FROM users WHERE email = ? AND id <> ?');
+    mysqli_stmt_bind_param($stmt, 'si', $email, $userId);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+    if (mysqli_stmt_num_rows($stmt) > 0) {
+        respond(409, ['error' => 'Questa email è già usata da un altro account.']);
+    }
+
+    // Cambio password opzionale: richiede la password attuale corretta.
+    $newPassword = (string) ($body['newPassword'] ?? '');
+    if ($newPassword !== '') {
+        $currentPassword = (string) ($body['currentPassword'] ?? '');
+        if (!password_verify($currentPassword, $user['password_hash'])) {
+            respond(401, ['error' => 'La password attuale non è corretta.']);
+        }
+        if (strlen($newPassword) < 8) {
+            respond(400, ['error' => 'La nuova password deve avere almeno 8 caratteri.']);
+        }
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = mysqli_prepare(
+            $db,
+            'UPDATE users SET first_name = ?, last_name = ?, email = ?, password_hash = ? WHERE id = ?'
+        );
+        mysqli_stmt_bind_param($stmt, 'ssssi', $firstName, $lastName, $email, $hash, $userId);
+    } else {
+        $stmt = mysqli_prepare($db, 'UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?');
+        mysqli_stmt_bind_param($stmt, 'sssi', $firstName, $lastName, $email, $userId);
+    }
+    if (!mysqli_stmt_execute($stmt)) {
+        respond(500, ['error' => 'Salvataggio del profilo fallito.']);
+    }
+
+    respond(200, [
+        'ok' => true,
+        'user' => ['firstName' => $firstName, 'lastName' => $lastName, 'email' => $email],
+    ]);
+}
+
+// ============================================================
 // STATO DELL'APP (lettura/scrittura, richiede il token utente)
 // ============================================================
 if ($action === 'state') {
