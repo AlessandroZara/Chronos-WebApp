@@ -28,7 +28,7 @@
 - [x] **Eventi con categoria e preavviso** — tipo di evento (appuntamento, lavoro, salute, compleanno…) con icona e colore, e notifica anticipata configurabile in minuti, ore o giorni
 - [x] **Habit Tracker** — abitudini quotidiane con streak 🔥, griglia degli ultimi 28 giorni e promemoria a orario
 - [x] **Statistiche e resoconti** — dashboard con grafici settimanali/mensili su focus, attività completate e abitudini, più report testuale
-- [x] **Modalità scura** — manuale o programmata in base all'orario
+- [x] **Modalità scura** — manuale, in base al tema di sistema del dispositivo, o programmata in base all'orario
 - [x] **PWA installabile** — offline completo e installazione su telefono/desktop
 - [x] **Backup dati** — esportazione/importazione completa in JSON
 - [x] **Sincronizzazione cloud** — API PHP + MySQL da caricare sul proprio hosting (es. Altervista): dati allineati tra telefono e computer, offline-first

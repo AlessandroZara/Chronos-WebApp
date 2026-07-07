@@ -99,6 +99,7 @@ export default function SettingsView() {
           >
             <option value="light">☀️ Chiaro</option>
             <option value="dark">🌙 Scuro</option>
+            <option value="system">🖥️ Come il sistema (PC/telefono)</option>
             <option value="auto">🕐 Automatico in base all'orario</option>
           </select>
         </div>

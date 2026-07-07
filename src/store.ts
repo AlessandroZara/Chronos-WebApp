@@ -14,7 +14,7 @@ import type {
 import { todayStr, uid } from './utils';
 
 export const defaultSettings: Settings = {
-  theme: 'auto',
+  theme: 'system', // default: segue il tema del dispositivo
   darkStart: '20:00',
   darkEnd: '07:00',
   notifEnabled: true,

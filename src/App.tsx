@@ -31,18 +31,25 @@ export default function App() {
   const timer = useChronos((s) => s.timer);
   const auth = useChronos((s) => s.auth);
 
-  // Tema: manuale o automatico in base all'orario, rivalutato ogni minuto.
+  // Tema: manuale, come il sistema (PC/telefono) o automatico a orario.
+  // Rivalutato ogni minuto e all'istante se cambia il tema del dispositivo.
   useEffect(() => {
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
       const dark =
         settings.theme === 'dark' ||
+        (settings.theme === 'system' && systemDark.matches) ||
         (settings.theme === 'auto' &&
           isTimeInRange(nowHM(), settings.darkStart, settings.darkEnd));
       document.documentElement.classList.toggle('dark', dark);
     };
     apply();
     const int = setInterval(apply, 60_000);
-    return () => clearInterval(int);
+    systemDark.addEventListener('change', apply);
+    return () => {
+      clearInterval(int);
+      systemDark.removeEventListener('change', apply);
+    };
   }, [settings.theme, settings.darkStart, settings.darkEnd]);
 
   // Scheduler dei promemoria (attività, eventi, abitudini).

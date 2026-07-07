@@ -84,7 +84,8 @@ export interface AuthState {
 }
 
 export interface Settings {
-  theme: 'light' | 'dark' | 'auto';
+  /** system = segue il tema di PC/telefono; auto = in base all'orario. */
+  theme: 'light' | 'dark' | 'system' | 'auto';
   darkStart: string; // HH:MM — inizio tema scuro in modalità auto
   darkEnd: string; // HH:MM — fine tema scuro in modalità auto
   notifEnabled: boolean;
