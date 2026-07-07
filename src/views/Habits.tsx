@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { habitStreak, useChronos } from '../store';
+import { askConfirm } from '../components/ConfirmDialog';
 import { lastNDays, parseDate, todayStr } from '../utils';
 
 const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
@@ -110,8 +111,9 @@ export default function Habits() {
                 </span>
               )}
               <button
-                onClick={() => {
-                  if (confirm(`Eliminare l'abitudine "${h.name}"?`)) deleteHabit(h.id);
+                onClick={async () => {
+                  if (await askConfirm(`Eliminare l'abitudine "${h.name}"?`, 'Elimina'))
+                    deleteHabit(h.id);
                 }}
                 className="btn-danger !p-1.5"
                 aria-label="Elimina abitudine"

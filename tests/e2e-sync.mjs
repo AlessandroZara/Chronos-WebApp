@@ -162,6 +162,35 @@ check(
   JSON.stringify(desktop)
 );
 
+// ---- Test 8: popup di conferma personalizzato (brand Chronos) ----
+// Apre Impostazioni -> "Esci": deve comparire il dialogo di Chronos
+// (non il confirm nativo); "Annulla" lo chiude senza fare logout.
+await page.evaluate(() => {
+  [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Opzioni')).click();
+});
+await sleep(400);
+await page.evaluate(() => {
+  [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Esci')).click();
+});
+await sleep(400);
+const dialog = await page.evaluate(() => {
+  const d = document.querySelector('[role="dialog"]');
+  return { open: !!d, branded: !!d && d.textContent.includes('Chronos') };
+});
+await page.evaluate(() => {
+  [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Annulla').click();
+});
+await sleep(400);
+const afterCancel = await page.evaluate(() => ({
+  closed: !document.querySelector('[role="dialog"]'),
+  stillLogged: !!JSON.parse(localStorage.getItem('chronos-data')).state.auth.token,
+}));
+check(
+  '8. popup di conferma Chronos: si apre brandizzato, Annulla non esegue il logout',
+  dialog.open && dialog.branded && afterCancel.closed && afterCancel.stillLogged,
+  JSON.stringify({ ...dialog, ...afterCancel })
+);
+
 await browser.close();
 console.log(results.every(Boolean) ? '\nTUTTI I TEST SUPERATI' : '\nALCUNI TEST FALLITI');
 process.exit(results.every(Boolean) ? 0 : 1);

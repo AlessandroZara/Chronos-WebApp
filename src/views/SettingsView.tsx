@@ -6,6 +6,7 @@ import {
   requestNotificationPermission,
 } from '../notifications';
 import { pullNow, useSyncStatus } from '../sync';
+import { askConfirm } from '../components/ConfirmDialog';
 import { todayStr } from '../utils';
 
 export default function SettingsView() {
@@ -301,10 +302,11 @@ export default function SettingsView() {
             🔄 Sincronizza ora
           </button>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (
-                confirm(
-                  'Uscire dall\'account? I dati non ancora sincronizzati su questo dispositivo andranno persi.'
+                await askConfirm(
+                  "Uscire dall'account? I dati non ancora sincronizzati su questo dispositivo andranno persi.",
+                  'Esci'
                 )
               )
                 logout();
@@ -339,8 +341,13 @@ export default function SettingsView() {
       <section className="card space-y-2 !border-red-200 dark:!border-red-900">
         <h2 className="font-semibold text-red-600 dark:text-red-400">⚠️ Zona pericolosa</h2>
         <button
-          onClick={() => {
-            if (confirm('Cancellare TUTTI i dati di Chronos? L\'operazione non è reversibile.'))
+          onClick={async () => {
+            if (
+              await askConfirm(
+                "Cancellare TUTTI i dati di Chronos? L'operazione non è reversibile.",
+                'Cancella tutto'
+              )
+            )
               resetAll();
           }}
           className="btn-danger border border-red-200 dark:border-red-900"

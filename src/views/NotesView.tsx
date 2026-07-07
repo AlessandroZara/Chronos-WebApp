@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChronos } from '../store';
 import { useToasts } from '../notifications';
+import { askConfirm } from '../components/ConfirmDialog';
 import { compressImage, extractWikiLinks, stripHtml } from '../utils';
 
 /*
@@ -180,9 +181,12 @@ function RichEditor({
         suppressContentEditableWarning
         className="rich-editor rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700"
         onInput={scheduleSave}
-        onClick={(e) => {
+        onClick={async (e) => {
           const target = e.target as HTMLElement;
-          if (target.tagName === 'IMG' && confirm("Rimuovere l'immagine dalla nota?")) {
+          if (
+            target.tagName === 'IMG' &&
+            (await askConfirm("Rimuovere l'immagine dalla nota?", 'Rimuovi'))
+          ) {
             target.remove();
             scheduleSave();
           }
@@ -408,8 +412,8 @@ export default function NotesView() {
                 💾 Salva nota
               </button>
               <button
-                onClick={() => {
-                  if (confirm(`Eliminare la nota "${selected.title}"?`)) {
+                onClick={async () => {
+                  if (await askConfirm(`Eliminare la nota "${selected.title}"?`, 'Elimina')) {
                     deleteNote(selected.id);
                     setSelectedId(null);
                   }

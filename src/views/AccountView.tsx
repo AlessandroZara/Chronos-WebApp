@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useChronos } from '../store';
+import { askConfirm } from '../components/ConfirmDialog';
 import { pullNow, updateProfile, useSyncStatus } from '../sync';
 
 /*
@@ -206,8 +207,9 @@ export default function AccountView({ onBack }: { onBack: () => void }) {
           questo dispositivo andranno persi.
         </p>
         <button
-          onClick={() => {
-            if (confirm('Uscire dall\'account e tornare alla schermata di login?')) logout();
+          onClick={async () => {
+            if (await askConfirm("Uscire dall'account e tornare alla schermata di login?", 'Esci'))
+              logout();
           }}
           className="btn-danger border border-red-200 dark:border-red-900"
         >
