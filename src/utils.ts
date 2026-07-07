@@ -79,3 +79,30 @@ export function fmtCountdown(totalSeconds: number): string {
   const s = totalSeconds % 60;
   return `${pad(m)}:${pad(s)}`;
 }
+
+import type { EventKind, ReminderUnit } from './types';
+
+/** Icona, etichetta e colore del puntino per ogni tipo di evento. */
+export const EVENT_KINDS: Record<EventKind, { label: string; icon: string; dot: string }> = {
+  appuntamento: { label: 'Appuntamento', icon: '📌', dot: 'bg-sky-500' },
+  lavoro: { label: 'Lavoro', icon: '💼', dot: 'bg-indigo-500' },
+  personale: { label: 'Personale', icon: '🏠', dot: 'bg-emerald-500' },
+  salute: { label: 'Salute', icon: '🩺', dot: 'bg-rose-500' },
+  compleanno: { label: 'Compleanno', icon: '🎂', dot: 'bg-pink-500' },
+  scadenza: { label: 'Scadenza', icon: '⏳', dot: 'bg-amber-500' },
+  altro: { label: 'Altro', icon: '📎', dot: 'bg-slate-400' },
+};
+
+/** "30 minuti", "1 ora", "2 giorni"... per i messaggi dei promemoria. */
+export function fmtOffset(value: number, unit: ReminderUnit): string {
+  if (unit === 'min') return `${value} ${value === 1 ? 'minuto' : 'minuti'}`;
+  if (unit === 'ore') return `${value} ${value === 1 ? 'ora' : 'ore'}`;
+  return `${value} ${value === 1 ? 'giorno' : 'giorni'}`;
+}
+
+/** Millisecondi per unità di preavviso. */
+export const UNIT_MS: Record<ReminderUnit, number> = {
+  min: 60_000,
+  ore: 3_600_000,
+  giorni: 86_400_000,
+};

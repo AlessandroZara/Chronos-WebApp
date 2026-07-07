@@ -21,7 +21,7 @@ export const defaultSettings: Settings = {
   notifTasks: true,
   notifEvents: true,
   notifHabits: true,
-  notifDaily: true,
+  summaryEvery: 1, // ogni giorno; 0 = mai, 2/3 = ogni 2-3 giorni, 7 = settimanale
   dailyTime: '08:30',
   pomodoro: { work: 25, short: 5, long: 15, cycles: 4 },
 };

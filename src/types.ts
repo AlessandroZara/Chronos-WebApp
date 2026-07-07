@@ -12,12 +12,28 @@ export interface Task {
   completedAt?: string; // YYYY-MM-DD
 }
 
+/** Categoria di un evento a calendario (icona e colore in utils.EVENT_KINDS). */
+export type EventKind =
+  | 'appuntamento'
+  | 'lavoro'
+  | 'personale'
+  | 'salute'
+  | 'compleanno'
+  | 'scadenza'
+  | 'altro';
+
+export type ReminderUnit = 'min' | 'ore' | 'giorni';
+
 export interface CalEvent {
   id: string;
   title: string;
   date: string; // YYYY-MM-DD
   time?: string; // HH:MM
+  kind?: EventKind;
   reminder: boolean;
+  /** Preavviso: quanto tempo prima notificare (es. 30 min, 2 ore, 1 giorno). */
+  reminderValue?: number;
+  reminderUnit?: ReminderUnit;
 }
 
 export interface Note {
@@ -75,8 +91,9 @@ export interface Settings {
   notifTasks: boolean;
   notifEvents: boolean;
   notifHabits: boolean;
-  notifDaily: boolean; // riepilogo giornaliero (attività, eventi, abitudini)
-  dailyTime: string; // HH:MM a cui inviare il riepilogo
+  /** Promemoria generale "controlla Chronos": ogni quanti giorni (0 = mai). */
+  summaryEvery: number;
+  dailyTime: string; // HH:MM a cui inviare il promemoria generale
   pomodoro: PomodoroConfig;
 }
 

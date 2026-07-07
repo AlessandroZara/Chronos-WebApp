@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { useChronos } from './store';
-import { nowHM, todayStr, uid } from './utils';
+import {
+  EVENT_KINDS,
+  fmtDate,
+  fmtOffset,
+  nowHM,
+  parseDate,
+  todayStr,
+  uid,
+  UNIT_MS,
+} from './utils';
 
 export interface Toast {
   id: string;
@@ -108,12 +117,36 @@ export function checkReminders() {
   }
 
   if (settings.notifEvents) {
+    const nowMs = Date.now();
     for (const e of events) {
-      if (!e.reminder || e.date !== today || !e.time) continue;
-      const key = `event:${e.id}:${today}`;
-      if (now >= e.time && !notified.has(key)) {
-        notify('📅 Evento in programma', e.title);
-        markNotified(key);
+      if (!e.reminder) continue;
+
+      // 1) Preavviso configurabile: "tra X minuti/ore/giorni".
+      //    Per gli eventi senza orario si assume come riferimento le 09:00.
+      if (e.reminderValue && e.reminderUnit) {
+        const [hh, mm] = (e.time ?? '09:00').split(':').map(Number);
+        const eventDate = parseDate(e.date);
+        eventDate.setHours(hh, mm, 0, 0);
+        const eventMs = eventDate.getTime();
+        const triggerMs = eventMs - e.reminderValue * UNIT_MS[e.reminderUnit];
+        const key = `evrem:${e.id}`;
+        if (nowMs >= triggerMs && nowMs < eventMs && !notified.has(key)) {
+          const kind = EVENT_KINDS[e.kind ?? 'appuntamento'];
+          notify(
+            `${kind.icon} Tra ${fmtOffset(e.reminderValue, e.reminderUnit)}: ${e.title}`,
+            `${kind.label} in programma ${e.date === today ? `oggi${e.time ? ` alle ${e.time}` : ''}` : `${fmtDate(e.date)}${e.time ? ` alle ${e.time}` : ''}`}.`
+          );
+          markNotified(key);
+        }
+      }
+
+      // 2) Notifica al momento dell'evento (comportamento già esistente).
+      if (e.date === today && e.time) {
+        const key = `event:${e.id}:${today}`;
+        if (now >= e.time && !notified.has(key)) {
+          notify('📅 Evento in programma', e.title);
+          markNotified(key);
+        }
       }
     }
   }
@@ -129,11 +162,16 @@ export function checkReminders() {
     }
   }
 
-  // Riepilogo giornaliero: una sola notifica al giorno, all'orario scelto
-  // (o appena si apre l'app, se l'orario è già passato).
-  if (settings.notifDaily && now >= settings.dailyTime) {
-    const key = `daily:${today}`;
-    if (!notified.has(key)) {
+  // Promemoria generale "controlla Chronos": frequenza scelta dall'utente
+  // (ogni 1/2/3 giorni o settimanale, 0 = mai), all'orario impostato.
+  // L'ultima data di invio è salvata in localStorage così la cadenza
+  // "ogni N giorni" sopravvive anche alla chiusura del browser.
+  if (settings.summaryEvery > 0 && now >= settings.dailyTime) {
+    const last = localStorage.getItem('chronos-last-summary');
+    const daysSinceLast = last
+      ? Math.round((parseDate(today).getTime() - parseDate(last).getTime()) / 86_400_000)
+      : Number.POSITIVE_INFINITY;
+    if (daysSinceLast >= settings.summaryEvery) {
       const dueToday = tasks.filter((t) => !t.done && t.due === today).length;
       const overdue = tasks.filter((t) => !t.done && t.due && t.due < today).length;
       const todayEvents = events.filter((e) => e.date === today).length;
@@ -150,7 +188,7 @@ export function checkReminders() {
           ? `Oggi hai: ${parts.join(', ')}. Dai un'occhiata! 💪`
           : 'Nessun impegno in programma: giornata libera! 🌤️';
       notify('🌅 Il tuo riepilogo di oggi', body);
-      markNotified(key);
+      localStorage.setItem('chronos-last-summary', today);
     }
   }
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import type { EventKind, ReminderUnit } from '../types';
 import { useChronos } from '../store';
-import { fmtDateLong, localDateStr, todayStr } from '../utils';
+import { EVENT_KINDS, fmtDateLong, fmtOffset, localDateStr, todayStr } from '../utils';
 import { PRIORITY_META } from './Tasks';
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -20,7 +21,11 @@ export default function CalendarView() {
 
   const [evTitle, setEvTitle] = useState('');
   const [evTime, setEvTime] = useState('');
+  const [evKind, setEvKind] = useState<EventKind>('appuntamento');
   const [evReminder, setEvReminder] = useState(true);
+  // Preavviso: "avvisami X minuti/ore/giorni prima dell'evento".
+  const [evRemValue, setEvRemValue] = useState(30);
+  const [evRemUnit, setEvRemUnit] = useState<ReminderUnit>('min');
 
   const today = todayStr();
 
@@ -57,7 +62,11 @@ export default function CalendarView() {
       title: trimmed,
       date: selected,
       time: evTime || undefined,
+      kind: evKind,
       reminder: evReminder,
+      // Il preavviso viene salvato solo se il promemoria è attivo.
+      reminderValue: evReminder ? evRemValue : undefined,
+      reminderUnit: evReminder ? evRemUnit : undefined,
     });
     setEvTitle('');
     setEvTime('');
@@ -137,7 +146,7 @@ export default function CalendarView() {
                     <span
                       key={e.id}
                       className={`h-1.5 w-1.5 rounded-full ${
-                        isSelected ? 'bg-white' : 'bg-sky-500'
+                        isSelected ? 'bg-white' : EVENT_KINDS[e.kind ?? 'appuntamento'].dot
                       }`}
                     />
                   ))}
@@ -160,31 +169,76 @@ export default function CalendarView() {
       <div className="card space-y-3">
         <h2 className="font-semibold capitalize">{fmtDateLong(selected)}</h2>
 
-        <form onSubmit={submitEvent} className="flex flex-wrap gap-2">
-          <input
-            className="input min-w-40 flex-1"
-            placeholder="Nuovo evento…"
-            value={evTitle}
-            onChange={(e) => setEvTitle(e.target.value)}
-          />
-          <input
-            type="time"
-            className="input w-28"
-            value={evTime}
-            onChange={(e) => setEvTime(e.target.value)}
-          />
-          <label className="flex cursor-pointer items-center gap-1.5 text-sm">
+        <form onSubmit={submitEvent} className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             <input
-              type="checkbox"
-              checked={evReminder}
-              onChange={(e) => setEvReminder(e.target.checked)}
-              className="h-4 w-4 accent-indigo-600"
+              className="input min-w-40 flex-1"
+              placeholder="Nuovo evento…"
+              value={evTitle}
+              onChange={(e) => setEvTitle(e.target.value)}
             />
-            🔔
-          </label>
-          <button type="submit" className="btn-primary">
-            ➕
-          </button>
+            {/* Tipo di evento: determina icona e colore nel calendario */}
+            <select
+              className="input w-auto"
+              value={evKind}
+              onChange={(e) => setEvKind(e.target.value as EventKind)}
+              aria-label="Tipo di evento"
+            >
+              {Object.entries(EVENT_KINDS).map(([key, meta]) => (
+                <option key={key} value={key}>
+                  {meta.icon} {meta.label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="time"
+              className="input w-28"
+              value={evTime}
+              onChange={(e) => setEvTime(e.target.value)}
+            />
+            <button type="submit" className="btn-primary">
+              ➕
+            </button>
+          </div>
+          {/* Promemoria anticipato: quanto tempo prima ricevere la notifica */}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={evReminder}
+                onChange={(e) => setEvReminder(e.target.checked)}
+                className="h-4 w-4 accent-indigo-600"
+              />
+              🔔 Avvisami
+            </label>
+            {evReminder && (
+              <>
+                <input
+                  type="number"
+                  min={1}
+                  max={999}
+                  className="input !w-20 !py-1"
+                  value={evRemValue}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (Number.isFinite(v) && v >= 1) setEvRemValue(v);
+                  }}
+                  aria-label="Quanto tempo prima"
+                />
+                <select
+                  className="input !w-auto !py-1"
+                  value={evRemUnit}
+                  onChange={(e) => setEvRemUnit(e.target.value as ReminderUnit)}
+                  aria-label="Unità di tempo"
+                >
+                  <option value="min">minuti</option>
+                  <option value="ore">ore</option>
+                  <option value="giorni">giorni</option>
+                </select>
+                <span className="text-slate-500 dark:text-slate-400">prima dell'evento</span>
+              </>
+            )}
+          </div>
         </form>
 
         {selEvents.length === 0 && selTasks.length === 0 && (
@@ -193,28 +247,34 @@ export default function CalendarView() {
           </p>
         )}
 
-        {selEvents.map((e) => (
-          <div
-            key={e.id}
-            className="flex items-center gap-3 rounded-lg bg-sky-50 p-2.5 dark:bg-sky-950/50"
-          >
-            <span>📌</span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{e.title}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {e.time ? `Ore ${e.time}` : 'Tutto il giorno'}
-                {e.reminder && e.time && ' · 🔔 promemoria attivo'}
-              </p>
-            </div>
-            <button
-              onClick={() => deleteEvent(e.id)}
-              className="btn-danger !p-1.5"
-              aria-label="Elimina evento"
+        {selEvents.map((e) => {
+          const kind = EVENT_KINDS[e.kind ?? 'appuntamento'];
+          return (
+            <div
+              key={e.id}
+              className="flex items-center gap-3 rounded-lg bg-sky-50 p-2.5 dark:bg-sky-950/50"
             >
-              🗑️
-            </button>
-          </div>
-        ))}
+              <span title={kind.label}>{kind.icon}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{e.title}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {kind.label} · {e.time ? `ore ${e.time}` : 'tutto il giorno'}
+                  {e.reminder &&
+                    e.reminderValue &&
+                    e.reminderUnit &&
+                    ` · 🔔 ${fmtOffset(e.reminderValue, e.reminderUnit)} prima`}
+                </p>
+              </div>
+              <button
+                onClick={() => deleteEvent(e.id)}
+                className="btn-danger !p-1.5"
+                aria-label="Elimina evento"
+              >
+                🗑️
+              </button>
+            </div>
+          );
+        })}
 
         {selTasks.map((t) => (
           <div

@@ -196,23 +196,40 @@ export default function SettingsView() {
           disabled={!settings.notifEnabled}
           onChange={(v) => setSettings({ notifHabits: v })}
         />
-        <ToggleRow
-          label="Riepilogo giornaliero (attività, eventi, abitudini)"
-          checked={settings.notifDaily}
-          disabled={!settings.notifEnabled}
-          onChange={(v) => setSettings({ notifDaily: v })}
-        />
-        {settings.notifDaily && settings.notifEnabled && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500 dark:text-slate-400">🌅 Orario del riepilogo:</span>
-            <input
-              type="time"
-              className="input !w-28 !py-1"
-              value={settings.dailyTime}
-              onChange={(e) => setSettings({ dailyTime: e.target.value })}
-            />
+        {/* Promemoria generale: la notifica "controlla Chronos" con il
+            riepilogo di impegni e abitudini, a frequenza personalizzabile.
+            È separata dai preavvisi puntuali dei singoli eventi. */}
+        <div className={settings.notifEnabled ? '' : 'pointer-events-none opacity-50'}>
+          <label className="label" htmlFor="summary-every">
+            🌅 Promemoria generale con riepilogo
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              id="summary-every"
+              className="input !w-auto"
+              value={settings.summaryEvery}
+              onChange={(e) => setSettings({ summaryEvery: Number(e.target.value) })}
+            >
+              <option value={0}>Mai</option>
+              <option value={1}>Ogni giorno</option>
+              <option value={2}>Ogni 2 giorni</option>
+              <option value={3}>Ogni 3 giorni</option>
+              <option value={7}>Ogni settimana</option>
+            </select>
+            {settings.summaryEvery > 0 && (
+              <>
+                <span className="text-sm text-slate-500 dark:text-slate-400">alle</span>
+                <input
+                  type="time"
+                  className="input !w-28"
+                  value={settings.dailyTime}
+                  onChange={(e) => setSettings({ dailyTime: e.target.value })}
+                  aria-label="Orario del promemoria generale"
+                />
+              </>
+            )}
           </div>
-        )}
+        </div>
         <button
           onClick={() => notify('🔔 Notifica di prova', 'Le notifiche funzionano! 🎉')}
           className="btn-ghost border border-slate-200 dark:border-slate-700"
