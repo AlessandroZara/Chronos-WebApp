@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import type { EventKind, ReminderUnit } from '../types';
+import type { CalEvent, EventKind, ReminderUnit } from '../types';
 import { useChronos } from '../store';
+import { askConfirm } from '../components/ConfirmDialog';
 import { EVENT_KINDS, fmtDateLong, fmtOffset, localDateStr, todayStr } from '../utils';
 import { PRIORITY_META } from './Tasks';
 
@@ -11,6 +12,7 @@ export default function CalendarView() {
   const tasks = useChronos((s) => s.tasks);
   const events = useChronos((s) => s.events);
   const addEvent = useChronos((s) => s.addEvent);
+  const updateEvent = useChronos((s) => s.updateEvent);
   const deleteEvent = useChronos((s) => s.deleteEvent);
   const toggleTask = useChronos((s) => s.toggleTask);
 
@@ -26,6 +28,30 @@ export default function CalendarView() {
   // Preavviso: "avvisami X minuti/ore/giorni prima dell'evento".
   const [evRemValue, setEvRemValue] = useState(30);
   const [evRemUnit, setEvRemUnit] = useState<ReminderUnit>('min');
+  // Se valorizzato, il form sta MODIFICANDO un evento esistente.
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
+  const resetEventForm = () => {
+    setEvTitle('');
+    setEvTime('');
+    setEvKind('appuntamento');
+    setEvReminder(true);
+    setEvRemValue(30);
+    setEvRemUnit('min');
+    setEditingEventId(null);
+  };
+
+  // Carica i dati di un evento nel form per modificarlo.
+  const startEditEvent = (e: CalEvent) => {
+    setEditingEventId(e.id);
+    setEvTitle(e.title);
+    setEvTime(e.time ?? '');
+    setEvKind(e.kind ?? 'appuntamento');
+    setEvReminder(e.reminder);
+    setEvRemValue(e.reminderValue ?? 30);
+    setEvRemUnit(e.reminderUnit ?? 'min');
+    setSelected(e.date); // porta la selezione sul giorno dell'evento
+  };
 
   const today = todayStr();
 
@@ -58,8 +84,10 @@ export default function CalendarView() {
     e.preventDefault();
     const trimmed = evTitle.trim();
     if (!trimmed) return;
-    addEvent({
+    const payload = {
       title: trimmed,
+      // In modifica, il giorno selezionato diventa la (eventuale nuova) data:
+      // così si può anche spostare un evento a un altro giorno.
       date: selected,
       time: evTime || undefined,
       kind: evKind,
@@ -67,9 +95,10 @@ export default function CalendarView() {
       // Il preavviso viene salvato solo se il promemoria è attivo.
       reminderValue: evReminder ? evRemValue : undefined,
       reminderUnit: evReminder ? evRemUnit : undefined,
-    });
-    setEvTitle('');
-    setEvTime('');
+    };
+    if (editingEventId) updateEvent(editingEventId, payload);
+    else addEvent(payload);
+    resetEventForm();
   };
 
   const monthLabel = new Date(year, month, 1).toLocaleDateString('it-IT', {
@@ -169,11 +198,20 @@ export default function CalendarView() {
       <div className="card space-y-3">
         <h2 className="font-semibold capitalize">{fmtDateLong(selected)}</h2>
 
-        <form onSubmit={submitEvent} className="space-y-2">
+        <form
+          onSubmit={submitEvent}
+          className="space-y-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/60"
+        >
+          {/* Intestazione esplicita: si capisce subito a cosa serve il form */}
+          <p className="label !mb-1">
+            {editingEventId
+              ? '✏️ Stai modificando l\'evento'
+              : '➕ Nuovo evento, appuntamento o impegno'}
+          </p>
           <div className="flex flex-wrap gap-2">
             <input
               className="input min-w-40 flex-1"
-              placeholder="Nuovo evento…"
+              placeholder="Es. Dentista, riunione, compleanno…"
               value={evTitle}
               onChange={(e) => setEvTitle(e.target.value)}
             />
@@ -196,9 +234,6 @@ export default function CalendarView() {
               value={evTime}
               onChange={(e) => setEvTime(e.target.value)}
             />
-            <button type="submit" className="btn-primary">
-              ➕
-            </button>
           </div>
           {/* Promemoria anticipato: quanto tempo prima ricevere la notifica */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -239,6 +274,22 @@ export default function CalendarView() {
               </>
             )}
           </div>
+          {/* Pulsante con etichetta chiara (niente più "+" solitario) */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button type="submit" className="btn-primary">
+              {editingEventId ? '💾 Salva modifiche' : '➕ Aggiungi al calendario'}
+            </button>
+            {editingEventId && (
+              <>
+                <button type="button" onClick={resetEventForm} className="btn-ghost">
+                  Annulla
+                </button>
+                <span className="text-xs text-slate-400">
+                  💡 Seleziona un altro giorno per spostare l'evento
+                </span>
+              </>
+            )}
+          </div>
         </form>
 
         {selEvents.length === 0 && selTasks.length === 0 && (
@@ -266,7 +317,17 @@ export default function CalendarView() {
                 </p>
               </div>
               <button
-                onClick={() => deleteEvent(e.id)}
+                onClick={() => startEditEvent(e)}
+                className="btn-ghost !p-1.5"
+                aria-label="Modifica evento"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={async () => {
+                  if (await askConfirm(`Eliminare "${e.title}" dal calendario?`, 'Elimina'))
+                    deleteEvent(e.id);
+                }}
                 className="btn-danger !p-1.5"
                 aria-label="Elimina evento"
               >

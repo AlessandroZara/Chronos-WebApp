@@ -70,6 +70,7 @@ interface ChronosStore {
   deleteTask: (id: string) => void;
 
   addEvent: (input: Omit<CalEvent, 'id'>) => void;
+  updateEvent: (id: string, patch: Partial<CalEvent>) => void;
   deleteEvent: (id: string) => void;
 
   addNote: (title?: string) => string;
@@ -141,6 +142,11 @@ export const useChronos = create<ChronosStore>()(
 
       addEvent: (input) =>
         set((s) => ({ events: [...s.events, { ...input, id: uid() }] })),
+
+      updateEvent: (id, patch) =>
+        set((s) => ({
+          events: s.events.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+        })),
 
       deleteEvent: (id) =>
         set((s) => ({ events: s.events.filter((e) => e.id !== id) })),

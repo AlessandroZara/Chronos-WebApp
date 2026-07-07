@@ -129,7 +129,9 @@ export function checkReminders() {
         eventDate.setHours(hh, mm, 0, 0);
         const eventMs = eventDate.getTime();
         const triggerMs = eventMs - e.reminderValue * UNIT_MS[e.reminderUnit];
-        const key = `evrem:${e.id}`;
+        // La chiave include data/orario/preavviso: se l'evento viene
+        // modificato, il promemoria si riarma da solo.
+        const key = `evrem:${e.id}:${e.date}:${e.time ?? ''}:${e.reminderValue}${e.reminderUnit}`;
         if (nowMs >= triggerMs && nowMs < eventMs && !notified.has(key)) {
           const kind = EVENT_KINDS[e.kind ?? 'appuntamento'];
           notify(
@@ -142,7 +144,7 @@ export function checkReminders() {
 
       // 2) Notifica al momento dell'evento (comportamento già esistente).
       if (e.date === today && e.time) {
-        const key = `event:${e.id}:${today}`;
+        const key = `event:${e.id}:${today}:${e.time}`;
         if (now >= e.time && !notified.has(key)) {
           notify('📅 Evento in programma', e.title);
           markNotified(key);
