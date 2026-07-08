@@ -5,3 +5,5 @@ dist/
 
 # Credenziali del server: mai su repository pubbliche
 server/config.php
+# Chiave privata VAPID (Web Push): come sopra, mai nel repository
+server/push-config.php

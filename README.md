@@ -91,17 +91,21 @@ Chronos/
 │   ├── App.tsx              # Layout responsive, navigazione, tema, motore timer
 │   ├── store.ts             # Stato centrale (Zustand) con salvataggio automatico
 │   ├── notifications.ts     # Toast in-app, notifiche di sistema, scheduler promemoria
+│   ├── push.ts              # Subscription Web Push del dispositivo (chiave VAPID pubblica)
 │   ├── types.ts             # Tipi TypeScript condivisi
 │   ├── utils.ts             # Helper per date, formattazioni, wiki-link
 │   ├── sync.ts              # Sincronizzazione offline-first con il server
-│   ├── components/          # BarChart, Toasts
+│   ├── components/          # BarChart, Toasts, NotificationPrompt
 │   └── views/               # AuthView (login/registrazione), AccountView (profilo),
 │                            #   Dashboard, Tasks, CalendarView, NotesView,
 │                            #   Focus, Habits, SettingsView
 ├── server/
 │   ├── api.php              # API REST: registrazione, login, stato per utente
 │   ├── config.sample.php    # Credenziali DB (da copiare in config.php)
+│   ├── push-config.sample.php # Chiavi VAPID Web Push (generate con tools/, mai committate)
 │   └── README.md            # Istruzioni di deploy su Altervista
+├── tools/
+│   └── generate-vapid-keys.mjs # Genera la coppia di chiavi VAPID per il Web Push
 ├── tests/
 │   └── e2e-sync.mjs         # Test end-to-end (login, sync, isolamento utenti)
 └── README.md

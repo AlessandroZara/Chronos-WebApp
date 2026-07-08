@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { ensurePushSubscription } from './push';
 import { useChronos } from './store';
 import {
   EVENT_KINDS,
@@ -94,6 +95,10 @@ export async function requestNotificationPermission(): Promise<boolean> {
     const maybePromise = Notification.requestPermission(resolve);
     if (maybePromise) void maybePromise.then(resolve);
   });
+  // Permesso appena concesso: creiamo subito la subscription Web Push,
+  // così il dispositivo è già pronto per i promemoria dal server.
+  // "Fire and forget": se fallisce restano le notifiche locali.
+  if (result === 'granted') void ensurePushSubscription();
   return result === 'granted';
 }
 
