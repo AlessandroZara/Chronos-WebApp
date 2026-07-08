@@ -185,7 +185,9 @@ export default function App() {
         ))}
       </nav>
 
-      <NotificationPrompt />
+      {/* Nelle Opzioni c'è già il riquadro con lo stesso invito:
+          mostrare anche il banner sarebbe un doppione. */}
+      {view !== 'settings' && <NotificationPrompt />}
       <Toasts />
       <ConfirmDialog />
     </div>

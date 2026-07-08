@@ -41,30 +41,41 @@ export function notificationsSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window;
 }
 
+/** true su iPhone/iPad. Gli iPad recenti si presentano come Mac: li distingue il touch. */
+export function isIOS(): boolean {
+  const ua = navigator.userAgent;
+  return /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+/** true quando Chronos gira installata (PWA), non dentro una scheda del browser. */
+export function isStandalone(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    // Proprietà solo di Safari iOS, assente dai tipi standard.
+    (navigator as { standalone?: boolean }).standalone === true
+  );
+}
+
 /**
- * Istruzioni per sbloccare le notifiche negate, diverse per piattaforma:
- * su computer si passa dall'icona accanto all'indirizzo, su Android dal
- * menu del browser (o dalle impostazioni di sistema se installata come
- * app), su iPhone/iPad serve prima l'installazione nella schermata Home.
+ * Istruzioni per sbloccare le notifiche negate, diverse per piattaforma
+ * E per contesto (browser o app installata). Il caso iOS-browser non
+ * passa da qui: lì l'API Notification non esiste proprio e il percorso
+ * giusto è prima installare l'app (vedi NotificationPrompt).
  */
 export function notifUnblockInstructions(): string {
-  const ua = navigator.userAgent;
-  // Gli iPad recenti si presentano come Mac: li distingue il touch.
-  const isIOS =
-    /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
-  if (isIOS) {
+  if (isIOS()) {
+    // Dentro la PWA installata l'unico sblocco è nelle impostazioni di sistema.
     return (
-      'Su iPhone/iPad le notifiche funzionano solo con Chronos installata ' +
-      'nella schermata Home (Condividi → Aggiungi a Home). Poi vai in ' +
-      'Impostazioni → Notifiche → Chronos e attiva "Consenti notifiche".'
+      'Su iPhone/iPad: apri Impostazioni → Notifiche → Chronos e attiva ' +
+      '"Consenti notifiche".'
     );
   }
-  if (/android/i.test(ua)) {
-    return (
-      'Su Android: apri il menu ⋮ del browser → Impostazioni sito → ' +
-      'Notifiche → Consenti. Se hai installato Chronos come app: ' +
-      'Impostazioni del telefono → App → Chronos → Notifiche.'
-    );
+  if (/android/i.test(navigator.userAgent)) {
+    return isStandalone()
+      ? "Su Android: tieni premuta l'icona di Chronos → Informazioni app → " +
+          'Notifiche → Consenti.'
+      : 'Su Android: apri il menu ⋮ del browser → Impostazioni sito → ' +
+          'Notifiche → Consenti.';
   }
   return (
     "Sul computer: clicca l'icona a sinistra dell'indirizzo (lucchetto o " +
@@ -76,7 +87,13 @@ export async function requestNotificationPermission(): Promise<boolean> {
   if (!notificationsSupported()) return false;
   if (Notification.permission === 'granted') return true;
   if (Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
+  // Doppia forma promise/callback: i Safari desktop meno recenti supportano
+  // solo quella con callback e con `await` diretto risolverebbero undefined,
+  // facendo passare per "negato" anche un permesso appena concesso.
+  const result = await new Promise<NotificationPermission>((resolve) => {
+    const maybePromise = Notification.requestPermission(resolve);
+    if (maybePromise) void maybePromise.then(resolve);
+  });
   return result === 'granted';
 }
 
