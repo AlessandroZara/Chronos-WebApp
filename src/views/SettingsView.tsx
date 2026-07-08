@@ -24,6 +24,12 @@ export default function SettingsView() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
+  // Stato del permesso notifiche del browser, in state locale così la
+  // sezione si aggiorna subito dopo la risposta dell'utente al prompt.
+  const [notifPermission, setNotifPermission] = useState(() =>
+    notificationsSupported() ? Notification.permission : 'unsupported'
+  );
+
   const syncStatus = useSyncStatus();
 
   const p = settings.pomodoro;
@@ -40,9 +46,18 @@ export default function SettingsView() {
     }
   };
 
+  // Chiede il permesso al browser e aggiorna lo stato mostrato nella
+  // sezione notifiche. Va chiamata da un click dell'utente: Firefox e
+  // Safari ignorano le richieste che non partono da un'interazione.
+  const askNotifPermission = async () => {
+    const granted = await requestNotificationPermission();
+    if (notificationsSupported()) setNotifPermission(Notification.permission);
+    return granted;
+  };
+
   const toggleNotifications = async (enabled: boolean) => {
     if (enabled) {
-      const granted = await requestNotificationPermission();
+      const granted = await askNotifPermission();
       setSettings({ notifEnabled: true });
       if (!granted) {
         notify(
@@ -173,6 +188,28 @@ export default function SettingsView() {
             Questo browser non supporta le notifiche di sistema: riceverai solo gli
             avvisi dentro l'app. Su iPhone/iPad installa prima Chronos nella schermata
             Home (Condividi → Aggiungi a Home).
+          </p>
+        )}
+        {/* Stato del permesso del browser: le notifiche di sistema
+            richiedono un consenso esplicito, separato dal toggle qui sotto.
+            - "default": mai chiesto → pulsante per richiederlo ora.
+            - "denied": bloccato → si sblocca solo dalle impostazioni del browser. */}
+        {settings.notifEnabled && notifPermission === 'default' && (
+          <div className="rounded-lg bg-indigo-50 p-3 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+            <p>
+              Il browser non ha ancora il permesso di mostrare le notifiche di
+              sistema: per ora vedi solo gli avvisi dentro l'app.
+            </p>
+            <button onClick={askNotifPermission} className="btn-primary mt-2">
+              🔔 Consenti notifiche di sistema
+            </button>
+          </div>
+        )}
+        {settings.notifEnabled && notifPermission === 'denied' && (
+          <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            Le notifiche di sistema sono bloccate dal browser. Per sbloccarle:
+            clicca sull'icona a sinistra dell'indirizzo → Impostazioni sito →
+            Notifiche → Consenti. Nel frattempo riceverai gli avvisi dentro l'app.
           </p>
         )}
         <ToggleRow

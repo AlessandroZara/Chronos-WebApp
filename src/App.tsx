@@ -5,6 +5,7 @@ import { checkReminders, notify } from './notifications';
 import { initSync } from './sync';
 import { fmtCountdown, isTimeInRange, nowHM } from './utils';
 import ConfirmDialog from './components/ConfirmDialog';
+import NotificationPrompt from './components/NotificationPrompt';
 import Toasts from './components/Toasts';
 import AccountView from './views/AccountView';
 import AuthView from './views/AuthView';
@@ -184,6 +185,7 @@ export default function App() {
         ))}
       </nav>
 
+      <NotificationPrompt />
       <Toasts />
       <ConfirmDialog />
     </div>
