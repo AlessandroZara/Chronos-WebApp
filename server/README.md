@@ -1,5 +1,31 @@
 # Chronos — Backend di sincronizzazione (Altervista / hosting PHP+MySQL)
 
+## Struttura consigliata sull'hosting
+
+Tutto nella root del sito, frontend e backend sullo stesso dominio
+(così l'app chiama `/api.php` senza configurare nulla):
+
+```
+htdocs/                       (root del tuo spazio web)
+├── index.html                ┐
+├── assets/                   │ contenuto di dist/ (build Vite: statico,
+├── sw.js                     │ nessun processo da tenere acceso)
+├── icon.svg                  │
+├── manifest.webmanifest      ┘
+├── api.php                   ← da server/ (eseguito da Apache a richiesta)
+├── config.php                ← creato sull'hosting: credenziali MySQL
+├── push-config.php           ← generato in locale: chiavi VAPID + segreto cron
+└── cron-reminders.php        ← da server/: lavori automatici (Web Push)
+```
+
+PHP su hosting classico non è un processo da avviare: Apache esegue
+`api.php` a ogni richiesta. I lavori periodici (invio promemoria push)
+girano via **cron**: dal pannello dell'hosting (`php .../cron-reminders.php`
+ogni 5 minuti) oppure, se il piano non ha cron, con un servizio esterno
+gratuito come cron-job.org che apre
+`https://tuosito/cron-reminders.php?secret=...` (il segreto è
+`cron_secret` in push-config.php).
+
 ## Deploy in 5 passi
 
 1. **Build dell'app**: nella cartella del progetto esegui `npm run build` → viene creata la cartella `dist/`.

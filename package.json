@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node tools/serve.mjs dev",
+    "dev:web": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:full": "node tools/serve.mjs preview"
   },
   "dependencies": {
     "react": "^19.1.0",

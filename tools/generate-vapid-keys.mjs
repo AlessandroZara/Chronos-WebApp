@@ -14,7 +14,7 @@
  * costante VAPID_PUBLIC_KEY di `src/push.ts` (la pubblica può stare nel
  * repository senza problemi: serve proprio al browser).
  */
-import { createECDH } from 'node:crypto';
+import { createECDH, randomBytes } from 'node:crypto';
 import { existsSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,6 +47,8 @@ const privatePadded = Buffer.concat([Buffer.alloc(32 - privateRaw.length), priva
 
 const publicKey = b64url(ecdh.getPublicKey()); // punto non compresso, 65 byte
 const privateKey = b64url(privatePadded);
+// Segreto per invocare cron-reminders.php via HTTP (cron esterni).
+const cronSecret = randomBytes(24).toString('hex');
 
 writeFileSync(
   outFile,
@@ -61,6 +63,8 @@ return [
     'vapid_subject' => 'mailto:${email}',
     'vapid_public_key' => '${publicKey}',
     'vapid_private_key' => '${privateKey}',
+    // Chiave d'accesso per lanciare cron-reminders.php via HTTP.
+    'cron_secret' => '${cronSecret}',
 ];
 `
 );

@@ -26,16 +26,14 @@ export const defaultSettings: Settings = {
   pomodoro: { work: 25, short: 5, long: 15, cycles: 4 },
 };
 
-// URL predefinito dell'API: in produzione (es. Altervista) è lo stesso
-// dominio che serve l'app; in locale punta al server PHP di sviluppo.
-const isLocalhost =
-  typeof location !== 'undefined' &&
-  (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-
+// URL predefinito dell'API: sempre `api.php` sul dominio del frontend.
+// In produzione il file sta fisicamente accanto a index.html; in locale
+// il proxy di Vite gira la richiesta al server PHP avviato da
+// tools/serve.mjs (vedi vite.config.ts). Niente URL speciali per il dev.
 export const defaultAuth: AuthState = {
   token: null,
   user: null,
-  apiUrl: isLocalhost ? 'http://localhost:8010/api.php' : `${location.origin}/api.php`,
+  apiUrl: typeof location !== 'undefined' ? `${location.origin}/api.php` : '/api.php',
 };
 
 const defaultTimer: TimerState = {

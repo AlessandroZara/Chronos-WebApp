@@ -17,4 +17,7 @@ return [
     'vapid_subject' => 'mailto:tua-email@esempio.it',
     'vapid_public_key' => 'CHIAVE_PUBBLICA_BASE64URL',
     'vapid_private_key' => 'CHIAVE_PRIVATA_BASE64URL',
+    // Chiave d'accesso per lanciare cron-reminders.php via HTTP
+    // (cron esterni tipo cron-job.org). Generata insieme alle chiavi.
+    'cron_secret' => 'SEGRETO_CASUALE_LUNGO',
 ];

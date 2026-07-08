@@ -64,12 +64,16 @@ cd chronos
 npm install
 
 # 3. Avvia in sviluppo (http://localhost:5173)
+#    Parte tutto da solo: frontend Vite + backend PHP (se PHP è installato).
 npm run dev
 
 # 4. Build di produzione + anteprima
 npm run build
-npm run preview
+npm run preview        # solo frontend statico
+npm run preview:full   # frontend statico + backend PHP, come in produzione
 ```
+
+In locale il frontend chiama sempre `/api.php` sul proprio dominio, come in produzione: è il proxy di Vite a girare la richiesta al server PHP avviato automaticamente (porta 8010). Niente URL da configurare a mano. `npm run dev:web` avvia il solo frontend, se non ti serve il backend.
 
 Per usarla dal telefono: pubblica la cartella `dist/` su un hosting statico gratuito (GitHub Pages, Netlify, Vercel…), apri l'indirizzo dal telefono e scegli **«Aggiungi a schermata Home»** — Chronos si installerà come una vera app.
 
