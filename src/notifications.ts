@@ -41,6 +41,37 @@ export function notificationsSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window;
 }
 
+/**
+ * Istruzioni per sbloccare le notifiche negate, diverse per piattaforma:
+ * su computer si passa dall'icona accanto all'indirizzo, su Android dal
+ * menu del browser (o dalle impostazioni di sistema se installata come
+ * app), su iPhone/iPad serve prima l'installazione nella schermata Home.
+ */
+export function notifUnblockInstructions(): string {
+  const ua = navigator.userAgent;
+  // Gli iPad recenti si presentano come Mac: li distingue il touch.
+  const isIOS =
+    /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    return (
+      'Su iPhone/iPad le notifiche funzionano solo con Chronos installata ' +
+      'nella schermata Home (Condividi → Aggiungi a Home). Poi vai in ' +
+      'Impostazioni → Notifiche → Chronos e attiva "Consenti notifiche".'
+    );
+  }
+  if (/android/i.test(ua)) {
+    return (
+      'Su Android: apri il menu ⋮ del browser → Impostazioni sito → ' +
+      'Notifiche → Consenti. Se hai installato Chronos come app: ' +
+      'Impostazioni del telefono → App → Chronos → Notifiche.'
+    );
+  }
+  return (
+    "Sul computer: clicca l'icona a sinistra dell'indirizzo (lucchetto o " +
+    'simbolo impostazioni) → Notifiche → Consenti, poi ricarica la pagina.'
+  );
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!notificationsSupported()) return false;
   if (Notification.permission === 'granted') return true;

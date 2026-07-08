@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useChronos } from '../store';
 import {
   notificationsSupported,
+  notifUnblockInstructions,
   notify,
   requestNotificationPermission,
 } from '../notifications';
@@ -207,9 +208,8 @@ export default function SettingsView() {
         )}
         {settings.notifEnabled && notifPermission === 'denied' && (
           <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-            Le notifiche di sistema sono bloccate dal browser. Per sbloccarle:
-            clicca sull'icona a sinistra dell'indirizzo → Impostazioni sito →
-            Notifiche → Consenti. Nel frattempo riceverai gli avvisi dentro l'app.
+            Le notifiche di sistema sono bloccate. {notifUnblockInstructions()}{' '}
+            Nel frattempo riceverai gli avvisi dentro l'app.
           </p>
         )}
         <ToggleRow
