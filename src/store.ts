@@ -23,7 +23,8 @@ export const defaultSettings: Settings = {
   notifHabits: true,
   summaryEvery: 1, // ogni giorno; 0 = mai, 2/3 = ogni 2-3 giorni, 7 = settimanale
   dailyTime: '08:30',
-  pomodoro: { work: 25, short: 5, long: 15, cycles: 4 },
+  // autoStart false = flusso manuale classico (default storico).
+  pomodoro: { work: 25, short: 5, long: 15, cycles: 4, autoStart: false },
 };
 
 // URL predefinito dell'API: sempre `api.php` sul dominio del frontend.
@@ -287,7 +288,14 @@ export const useChronos = create<ChronosStore>()(
         return {
           ...current,
           ...p,
-          settings: { ...current.settings, ...(p.settings ?? {}) },
+          settings: {
+            ...current.settings,
+            ...(p.settings ?? {}),
+            // Anche il pomodoro va riempito campo per campo: chi ha
+            // salvato le impostazioni prima di "autoStart" (o di campi
+            // futuri) deve ereditarne il default, non perderlo.
+            pomodoro: { ...current.settings.pomodoro, ...(p.settings?.pomodoro ?? {}) },
+          },
           auth: { ...current.auth, ...(p.auth ?? {}) },
         };
       },

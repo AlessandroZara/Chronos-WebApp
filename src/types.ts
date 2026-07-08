@@ -73,6 +73,12 @@ export interface PomodoroConfig {
   short: number;
   long: number;
   cycles: number; // sessioni prima della pausa lunga
+  /**
+   * true = a fine fase quella successiva parte da sola (pausa dopo il
+   * lavoro e nuova sessione dopo la pausa); false = comportamento
+   * manuale classico, il timer si prepara e aspetta ▶ Avvia.
+   */
+  autoStart: boolean;
 }
 
 /** Utente autenticato (restituito dall'API dopo login/registrazione). */

@@ -179,6 +179,19 @@ export default function SettingsView() {
             onChange={(v) => setPomodoro({ cycles: v })}
           />
         </div>
+        {/* Le due varianti del flusso: manuale classico (spento) o
+            concatenato (acceso), con pause e sessioni che si avviano
+            da sole a fine fase. La notifica arriva in entrambi i casi. */}
+        <ToggleRow
+          label="▶️ Avvio automatico di pause e sessioni"
+          checked={!!p.autoStart}
+          onChange={(v) => setPomodoro({ autoStart: v })}
+        />
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {p.autoStart
+            ? 'A fine sessione la pausa parte da sola, e a fine pausa riparte il focus: il ciclo va avanti finché non lo fermi tu.'
+            : 'A fine fase il timer si prepara e aspetta che premi ▶ Avvia (flusso manuale classico).'}
+        </p>
       </section>
 
       {/* ---- Notifiche ---- */}

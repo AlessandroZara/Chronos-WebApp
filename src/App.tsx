@@ -78,6 +78,12 @@ export default function App() {
         return;
       }
       const p = s.pomodoro;
+      // Con l'avvio automatico la fase successiva parte subito da sola;
+      // in manuale (default) il timer si prepara e aspetta ▶ Avvia.
+      const autoNext = (minutes: number) =>
+        p.autoStart
+          ? { running: true, endAt: Date.now() + minutes * 60_000 }
+          : { running: false, endAt: null };
       if (t.mode === 'work') {
         addSession({ minutes: p.work, taskId: t.taskId });
         const cycle = t.cycle + 1;
@@ -86,17 +92,24 @@ export default function App() {
         setTimer({
           mode: nextMode,
           cycle,
-          running: false,
-          endAt: null,
           remaining: nextMin * 60,
+          ...autoNext(nextMin),
         });
+        const pausa = `${nextMode === 'long' ? 'pausa lunga' : 'pausa breve'} di ${nextMin} min`;
         notify(
           '🍅 Sessione completata!',
-          `Ottimo lavoro: ${p.work} min di focus. Ora ${nextMode === 'long' ? 'pausa lunga' : 'pausa breve'} di ${nextMin} min.`
+          `Ottimo lavoro: ${p.work} min di focus. ${
+            p.autoStart ? `La ${pausa} è già partita.` : `Ora ${pausa}.`
+          }`
         );
       } else {
-        setTimer({ mode: 'work', running: false, endAt: null, remaining: p.work * 60 });
-        notify('☕ Pausa finita', 'Pronto per una nuova sessione di focus?');
+        setTimer({ mode: 'work', remaining: p.work * 60, ...autoNext(p.work) });
+        notify(
+          '☕ Pausa finita',
+          p.autoStart
+            ? `Si riparte: nuova sessione di focus da ${p.work} min già avviata!`
+            : 'Pronto per una nuova sessione di focus?'
+        );
       }
     }, 500);
     return () => clearInterval(int);
