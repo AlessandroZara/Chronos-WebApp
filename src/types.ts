@@ -8,6 +8,10 @@ export interface Task {
   time?: string; // HH:MM
   done: boolean;
   reminder: boolean;
+  /** Promemoria: quanti giorni prima della scadenza avvisare (0 = giorno stesso). */
+  reminderDaysBefore?: number;
+  /** Promemoria: a che ora avvisare (HH:MM). */
+  reminderTime?: string;
   createdAt: string; // ISO
   completedAt?: string; // YYYY-MM-DD
 }

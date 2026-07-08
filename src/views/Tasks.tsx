@@ -41,6 +41,9 @@ export default function Tasks() {
   const [due, setDue] = useState('');
   const [time, setTime] = useState('');
   const [reminder, setReminder] = useState(true);
+  // Quando avvisare: quanti giorni prima della scadenza e a che ora.
+  const [reminderDaysBefore, setReminderDaysBefore] = useState(0);
+  const [reminderTime, setReminderTime] = useState('09:00');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('tutte');
@@ -52,6 +55,8 @@ export default function Tasks() {
     setDue('');
     setTime('');
     setReminder(true);
+    setReminderDaysBefore(0);
+    setReminderTime('09:00');
     setEditingId(null);
   };
 
@@ -64,7 +69,10 @@ export default function Tasks() {
       priority,
       due: due || undefined,
       time: time || undefined,
-      reminder,
+      // Il promemoria ha senso solo con una scadenza da ricordare.
+      reminder: reminder && !!due,
+      reminderDaysBefore,
+      reminderTime,
     };
     if (editingId) updateTask(editingId, payload);
     else addTask(payload);
@@ -78,6 +86,10 @@ export default function Tasks() {
     setDue(t.due ?? '');
     setTime(t.time ?? '');
     setReminder(t.reminder);
+    // Attività create prima del promemoria configurabile: stessi
+    // ripieghi dello scheduler (giorno stesso, orario scadenza o 09:00).
+    setReminderDaysBefore(t.reminderDaysBefore ?? 0);
+    setReminderTime(t.reminderTime ?? t.time ?? '09:00');
   };
 
   const visible = tasks
@@ -158,10 +170,15 @@ export default function Tasks() {
             />
           </div>
           <div className="flex items-end pb-1">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label
+              className={`flex items-center gap-2 text-sm ${
+                due ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+              }`}
+            >
               <input
                 type="checkbox"
-                checked={reminder}
+                checked={reminder && !!due}
+                disabled={!due}
                 onChange={(e) => setReminder(e.target.checked)}
                 className="h-4 w-4 accent-indigo-600"
               />
@@ -169,6 +186,36 @@ export default function Tasks() {
             </label>
           </div>
         </div>
+
+        {/* Quando avvisare: come per gli eventi a calendario, si sceglie
+            il giorno (stesso giorno o in anticipo) e l'ora dell'avviso. */}
+        {reminder && due && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-slate-500 dark:text-slate-400">Avvisami</span>
+            <select
+              id="task-reminder-days"
+              className="input !w-auto"
+              value={reminderDaysBefore}
+              onChange={(e) => setReminderDaysBefore(Number(e.target.value))}
+              aria-label="Quanti giorni prima avvisare"
+            >
+              <option value={0}>il giorno stesso</option>
+              <option value={1}>1 giorno prima</option>
+              <option value={2}>2 giorni prima</option>
+              <option value={3}>3 giorni prima</option>
+              <option value={7}>1 settimana prima</option>
+            </select>
+            <span className="text-slate-500 dark:text-slate-400">alle</span>
+            <input
+              id="task-reminder-time"
+              type="time"
+              className="input !w-28"
+              value={reminderTime}
+              onChange={(e) => setReminderTime(e.target.value)}
+              aria-label="Ora del promemoria"
+            />
+          </div>
+        )}
         <div className="flex gap-2">
           <button type="submit" className="btn-primary">
             {editingId ? '💾 Salva modifiche' : '➕ Aggiungi'}
@@ -258,9 +305,15 @@ export default function Tasks() {
                       {overdue && ' · in ritardo'}
                     </span>
                   )}
-                  {t.reminder && t.due && t.time && !t.done && (
+                  {t.reminder && t.due && !t.done && (
                     <span className="chip bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                      🔔
+                      🔔{' '}
+                      {(t.reminderDaysBefore ?? 0) === 0
+                        ? 'stesso giorno'
+                        : t.reminderDaysBefore === 7
+                          ? '1 sett. prima'
+                          : `${t.reminderDaysBefore}g prima`}
+                      {` · ${t.reminderTime ?? t.time ?? '09:00'}`}
                     </span>
                   )}
                 </div>

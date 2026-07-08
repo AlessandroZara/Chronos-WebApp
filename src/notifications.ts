@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { ensurePushSubscription } from './push';
 import { useChronos } from './store';
 import {
+  addDays,
   EVENT_KINDS,
   fmtDate,
   fmtOffset,
@@ -160,10 +161,32 @@ export function checkReminders() {
 
   if (settings.notifTasks) {
     for (const t of tasks) {
-      if (t.done || !t.reminder || t.due !== today || !t.time) continue;
-      const key = `task:${t.id}:${today}`;
-      if (now >= t.time && !notified.has(key)) {
-        notify('⏰ Attività in scadenza', t.title);
+      if (t.done || !t.reminder || !t.due) continue;
+      // Promemoria configurabile: quanti giorni prima e a che ora.
+      // Compatibilità con le attività create prima di questa opzione:
+      // giorno stesso, all'orario della scadenza (o alle 09:00).
+      const daysBefore = t.reminderDaysBefore ?? 0;
+      const remTime = t.reminderTime ?? t.time ?? '09:00';
+      const remDate = addDays(t.due, -daysBefore);
+      // Scatta all'orario scelto del giorno del promemoria; se Chronos
+      // era chiuso in quel momento, recupera alla prima apertura utile
+      // (fino al giorno di scadenza incluso, poi non ha più senso).
+      const fireNow =
+        today > remDate ? today <= t.due : today === remDate && now >= remTime;
+      // La chiave include scadenza e impostazioni del promemoria: se
+      // l'attività viene modificata, il promemoria si riarma da solo.
+      const key = `task:${t.id}:${t.due}:${daysBefore}:${remTime}`;
+      if (fireNow && !notified.has(key)) {
+        const when =
+          t.due === today
+            ? 'oggi'
+            : t.due === addDays(today, 1)
+              ? 'domani'
+              : `${fmtDate(t.due)}`;
+        notify(
+          '⏰ Attività in scadenza',
+          `${t.title} — scade ${when}${t.time ? ` alle ${t.time}` : ''}.`
+        );
         markNotified(key);
       }
     }

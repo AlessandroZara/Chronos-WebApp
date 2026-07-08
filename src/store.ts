@@ -50,6 +50,8 @@ export interface TaskInput {
   due?: string;
   time?: string;
   reminder: boolean;
+  reminderDaysBefore?: number;
+  reminderTime?: string;
 }
 
 interface ChronosStore {
